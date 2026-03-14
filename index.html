@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ScoutBot PRO – Pronósticos en Tiempo Real</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#060d1a;color:#e2e8f0;font-family:'Barlow',sans-serif;min-height:100vh;padding:20px 16px}
+h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(32px,7vw,52px);letter-spacing:-1px;line-height:1}
+.container{max-width:800px;margin:0 auto}
+.header{text-align:center;margin-bottom:28px}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,202,183,0.08);border:1px solid rgba(99,202,183,0.2);border-radius:40px;padding:6px 18px;margin-bottom:14px}
+.dot{width:8px;height:8px;border-radius:50%;background:#63cab7;animation:pulse 2s infinite}
+.badge-text{font-size:12px;color:#63cab7;letter-spacing:2px;text-transform:uppercase;font-weight:600}
+.subtitle{color:#475569;font-size:13px;letter-spacing:1px;margin-top:6px}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px;margin-bottom:14px}
+.card-title{font-size:11px;color:#475569;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;font-weight:600}
+label{font-size:11px;color:#475569;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px}
+input,select{width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;font-family:'Barlow',sans-serif}
+input:focus,select:focus{outline:1px solid rgba(99,202,183,0.4)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.sport-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.sport-btn{flex:1;min-width:90px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#64748b;cursor:pointer;font-size:13px;font-weight:700;font-family:'Barlow',sans-serif;transition:all 0.2s}
+.sport-btn.active{border-color:#63cab7;background:rgba(99,202,183,0.12);color:#63cab7}
+.btn{padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;transition:all 0.2s}
+.btn-primary{background:linear-gradient(135deg,#22d3a0,#0ea5e9);color:#fff}
+.btn-secondary{background:rgba(99,202,183,0.1);border:1px solid rgba(99,202,183,0.25);color:#63cab7}
+.btn-full{width:100%;padding:14px;font-size:15px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1.5px;text-transform:uppercase;border-radius:10px;border:none;cursor:pointer;transition:all 0.2s}
+.btn-analyze{background:linear-gradient(135deg,#22d3a0,#0ea5e9);color:#fff;font-weight:800}
+.btn-analyze:disabled{background:#1e293b;color:#475569;cursor:not-allowed}
+.btn-analyze:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 20px rgba(34,211,160,0.2)}
+.match-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.match-item:hover,.match-item.selected{border-color:#63cab7;background:rgba(99,202,183,0.07)}
+.match-teams{font-size:14px;font-weight:700;color:#e2e8f0}
+.match-meta{font-size:11px;color:#475569;margin-top:3px}
+.match-time{font-size:12px;color:#63cab7;font-family:'Barlow Condensed',sans-serif;font-weight:700}
+.odds-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.odd-box{background:#0f172a;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px;text-align:center}
+.odd-label{font-size:10px;color:#475569;margin-bottom:3px}
+.odd-val{font-size:16px;font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#f59e0b}
+.error-box{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 14px;color:#fca5a5;font-size:13px;margin-bottom:12px;display:none}
+.info-box{background:rgba(99,202,183,0.06);border:1px solid rgba(99,202,183,0.15);border-radius:8px;padding:10px 14px;color:#64748b;font-size:12px;margin-bottom:12px;line-height:1.6}
+.loading{text-align:center;padding:24px;color:#475569;font-size:13px}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(99,202,183,0.2);border-top-color:#63cab7;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle}
+/* Result styles */
+.result{animation:fadeIn 0.5s ease}
+.result-hero{background:linear-gradient(135deg,rgba(34,211,160,0.1),rgba(14,165,233,0.05));border:1px solid rgba(34,211,160,0.25);border-radius:16px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.pred-label-sm{font-size:11px;color:#475569;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.pred-main{font-size:clamp(18px,4vw,26px);font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#fff;line-height:1.1}
+.conf-num{font-size:42px;font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#22d3a0;line-height:1}
+.nivel-badge{display:inline-block;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:4px}
+.prob-wrap{border-radius:12px;padding:14px 18px;margin-bottom:8px}
+.prob-wrap.hi{background:rgba(99,202,183,0.08);border:1px solid #63cab7}
+.prob-wrap.lo{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)}
+.prob-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prob-name{font-size:13px;font-weight:600}
+.prob-pct{font-size:22px;font-weight:800;font-family:'Barlow Condensed',sans-serif}
+.bar-track{height:5px;background:#0f172a;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.team-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px}
+.team-title{font-size:12px;font-weight:700;margin-bottom:10px;letter-spacing:0.5px}
+.sbar{margin-bottom:8px}
+.sbar-row{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-bottom:3px}
+.sbar-row span:last-child{color:#e2e8f0}
+.sbar-track{height:5px;background:#1e293b;border-radius:3px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:3px}
+.str-item{font-size:11px;color:#64748b;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:5px;align-items:flex-start}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.tag{background:rgba(99,202,183,0.08);border:1px solid rgba(99,202,183,0.15);border-radius:20px;padding:3px 11px;font-size:11px;color:#63cab7}
+.reasoning{font-size:13px;color:#94a3b8;line-height:1.7}
+.warning-box{background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-top:10px}
+.warning-box p{font-size:12px;color:#d97706;line-height:1.6}
+.value-badge{background:rgba(34,211,160,0.1);border:1px solid rgba(34,211,160,0.25);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.value-badge span{font-size:12px;color:#22d3a0}
+.value-badge strong{font-size:18px;font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#22d3a0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#060d1a}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+@media(max-width:500px){.grid-2{grid-template-columns:1fr}.teams-grid{grid-template-columns:1fr}.odds-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge"><div class="dot"></div><span class="badge-text">En Vivo · Datos Reales</span></div>
+    <h1><span style="color:#fff">SCOUT</span><span style="color:#63cab7">BOT</span> <span style="color:#334155;font-size:0.5em">PRO</span></h1>
+    <p class="subtitle">PRONÓSTICOS CON IA + DATOS EN TIEMPO REAL</p>
+  </div>
+
+  <!-- Config card -->
+  <div class="card" id="config-card">
+    <div class="card-title">⚙️ Configuración de APIs</div>
+    <div class="grid-3">
+      <div>
+        <label>🤖 Anthropic (IA)</label>
+        <input type="password" id="key-anthropic" placeholder="sk-ant-api03-..."/>
+      </div>
+      <div>
+        <label>📊 Football-Data.org</label>
+        <input type="password" id="key-football" placeholder="token de football-data.org..."/>
+      </div>
+      <div>
+        <label>🎰 OddsAPI</label>
+        <input type="password" id="key-odds" placeholder="tu key..."/>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="saveKeys()">💾 Guardar Keys</button>
+      <button class="btn btn-secondary" onclick="testFootballAPI()" id="btn-test">🧪 Probar Conexión</button>
+      <span id="keys-ok" style="display:none;font-size:12px;color:#22d3a0">✓ Keys guardadas</span>
+    </div>
+    <div id="test-result" style="display:none;margin-top:10px;font-size:12px;padding:8px 12px;border-radius:8px;line-height:1.7"></div>
+  </div>
+
+  <!-- Sport tabs -->
+  <div class="sport-tabs">
+    <button class="sport-btn active" onclick="setSport('football',this)">Fútbol ⚽</button>
+    <button class="sport-btn" onclick="setSport('basketball',this)">Basketball 🏀</button>
+    <button class="sport-btn" onclick="setSport('tennis',this)">Tenis 🎾</button>
+  </div>
+
+  <!-- Search matches -->
+  <div class="card">
+    <div class="card-title">🔍 Buscar Partido</div>
+    <div class="grid-2" style="margin-bottom:10px">
+      <div>
+        <label>Liga</label>
+        <select id="league-select"></select>
+      </div>
+      <div>
+        <label>Rango de fechas</label>
+        <select id="date-range">
+          <option value="0">Hoy</option>
+          <option value="1">Mañana</option>
+          <option value="3" selected>Próximos 3 días</option>
+          <option value="7">Próximos 7 días</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:12px" onclick="fetchMatches()">🔄 Buscar Próximos Partidos</button>
+    <div id="matches-list"></div>
+
+    <!-- Manual fallback -->
+    <details style="margin-top:10px">
+      <summary style="font-size:12px;color:#475569;cursor:pointer;padding:6px 0">✏️ O ingresá el partido manualmente</summary>
+      <div style="margin-top:12px">
+        <div class="grid-2">
+          <div><label>🏠 Equipo Local</label><input id="manual-home" placeholder="Ej: River Plate"/></div>
+          <div><label>✈️ Equipo Visitante</label><input id="manual-away" placeholder="Ej: Boca Juniors"/></div>
+        </div>
+        <div class="grid-2">
+          <div><label>Forma LOCAL (G/E/P)</label><input id="manual-hform" placeholder="GGGPP" maxlength="5"/></div>
+          <div><label>Forma VISITANTE (G/E/P)</label><input id="manual-aform" placeholder="GGPPP" maxlength="5"/></div>
+        </div>
+        <div class="grid-2" id="manual-stats">
+          <div><label>⚽ Prom. goles anotados LOCAL</label><input type="number" id="manual-hgf" value="1.5" step="0.1"/></div>
+          <div><label>⚽ Prom. goles anotados VISIT.</label><input type="number" id="manual-agf" value="1.3" step="0.1"/></div>
+        </div>
+        <div>
+          <label>Contexto extra</label>
+          <input id="manual-ctx" placeholder="Lesiones, historial h2h, clima, importancia del partido..."/>
+        </div>
+        <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="useManual()">Usar este partido</button>
+      </div>
+    </details>
+  </div>
+
+  <!-- Selected match display -->
+  <div id="selected-match-card" style="display:none" class="card">
+    <div class="card-title">🏟️ Partido Seleccionado</div>
+    <div id="selected-match-info"></div>
+    <div id="odds-section" style="margin-top:12px;display:none">
+      <div class="card-title" style="margin-top:8px">💰 Cuotas en Tiempo Real</div>
+      <div id="odds-display"></div>
+    </div>
+    <div style="margin-top:14px">
+      <label>Tipo de Pronóstico</label>
+      <select id="pred-type-select"></select>
+    </div>
+    <div style="margin-top:12px">
+      <label>Contexto adicional (opcional)</label>
+      <input id="extra-ctx" placeholder="Bajas, clima, importancia del partido, historial..."/>
+    </div>
+    <button class="btn-full btn-analyze" style="margin-top:14px" id="btn-analyze" onclick="analyze()">🔮 Analizar con IA</button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Result -->
+  <div id="result-section"></div>
+
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────
+const FD_API = 'https://api.football-data.org/v4';
+const ODDS_API_URL = 'https://api.the-odds-api.com/v4';
+
+// football-data.org fetch via proxy local
+async function footballFetch(path, kf) {
+  // Usamos el proxy local Python que evita CORS
+  const proxyUrl = '/proxy/football/' + path.replace(/^\//, '');
+  const r = await fetch(proxyUrl, { headers: { 'X-Proxy-Token': kf } });
+  if(!r.ok) throw new Error('HTTP ' + r.status + ' - Verificá tu token de football-data.org');
+  return await r.json();
+}
+
+const LEAGUES = {
+  football: [
+    {name:'⭐ Todas las ligas', id:'all', oddsKey:''},
+    {name:'Champions League (CL)', id:'CL', oddsKey:'soccer_uefa_champs_league'},
+    {name:'Premier League (PL)', id:'PL', oddsKey:'soccer_epl'},
+    {name:'La Liga (PD)', id:'PD', oddsKey:'soccer_spain_la_liga'},
+    {name:'Serie A (SA)', id:'SA', oddsKey:'soccer_italy_serie_a'},
+    {name:'Bundesliga (BL1)', id:'BL1', oddsKey:'soccer_germany_bundesliga'},
+    {name:'Ligue 1 (FL1)', id:'FL1', oddsKey:'soccer_france_ligue_one'},
+    {name:'Eredivisie (DED)', id:'DED', oddsKey:'soccer_netherlands_eredivisie'},
+    {name:'Brasileirao (BSA)', id:'BSA', oddsKey:'soccer_brazil_campeonato'},
+    {name:'Primera División Argentina (PD arg)', id:'ASL', oddsKey:'soccer_argentina_primera_division'},
+  ],
+  basketball: [
+    {name:'NBA', id:'NBA', oddsKey:'basketball_nba'},
+  ],
+  tennis: [
+    {name:'ATP / WTA', id:'ATP', oddsKey:''},
+  ]
+};
+
+const PRED_TYPES = {
+  football: ['Resultado 1X2','Over/Under 2.5 Goles','Ambos Equipos Marcan','Doble Oportunidad'],
+  basketball: ['Resultado 1X2','Over/Under Puntos','Handicap'],
+  tennis: ['Ganador del Partido','Over/Under Sets','Handicap Sets']
+};
+
+let currentSport = 'football';
+let selectedMatch = null;
+let fetchedOdds = null;
+
+// ─── INIT ───────────────────────────────────────────
+async function testFootballAPI() {
+  const kf = getKey('sb_football');
+  if(!kf) { alert('Ingresá tu token de football-data.org primero'); return; }
+  const btn = document.getElementById('btn-test');
+  const res = document.getElementById('test-result');
+  btn.textContent = '⏳ Probando...';
+  res.style.display = 'block';
+  res.style.background = 'rgba(99,202,183,0.05)';
+  res.style.border = '1px solid rgba(99,202,183,0.15)';
+  res.style.color = '#64748b';
+  res.innerHTML = 'Conectando con football-data.org...';
+  try {
+    const data = await footballFetch('/competitions/CL', kf);
+    if(data && data.name) {
+      res.style.background = 'rgba(34,211,160,0.08)';
+      res.style.border = '1px solid rgba(34,211,160,0.25)';
+      res.style.color = '#22d3a0';
+      res.innerHTML = '✅ Conexión exitosa!<br>Liga: ' + data.name + ' · Temporada: ' + (data.currentSeason?.startDate?.slice(0,4) || 'N/D') + '<br>¡Listo para buscar partidos!';
+    } else {
+      res.style.background = 'rgba(245,158,11,0.08)';
+      res.style.border = '1px solid rgba(245,158,11,0.2)';
+      res.style.color = '#f59e0b';
+      res.innerHTML = '⚠️ Respuesta inesperada: ' + JSON.stringify(data).slice(0,200);
+    }
+  } catch(e) {
+    res.style.background = 'rgba(248,113,113,0.08)';
+    res.style.border = '1px solid rgba(248,113,113,0.2)';
+    res.style.color = '#fca5a5';
+    res.innerHTML = '❌ Error: ' + e.message;
+  }
+  btn.textContent = '🧪 Probar Conexión';
+}
+
+window.onload = () => {
+  loadKeys();
+  updateLeagueSelect();
+  updatePredTypes();
+};
+
+function loadKeys() {
+  const ka = localStorage.getItem('sb_anthropic');
+  const kf = localStorage.getItem('sb_football');
+  const ko = localStorage.getItem('sb_odds');
+  if(ka) document.getElementById('key-anthropic').value = ka;
+  if(kf) document.getElementById('key-football').value = kf;
+  if(ko) document.getElementById('key-odds').value = ko;
+  if(ka||kf||ko) document.getElementById('keys-ok').style.display='inline';
+}
+
+function saveKeys() {
+  const ka = document.getElementById('key-anthropic').value.trim();
+  const kf = document.getElementById('key-football').value.trim();
+  const ko = document.getElementById('key-odds').value.trim();
+  if(ka) localStorage.setItem('sb_anthropic', ka);
+  if(kf) localStorage.setItem('sb_football', kf);
+  if(ko) localStorage.setItem('sb_odds', ko);
+  document.getElementById('keys-ok').style.display='inline';
+}
+
+function getKey(id) { return localStorage.getItem(id) || document.getElementById(id === 'sb_anthropic' ? 'key-anthropic' : id === 'sb_football' ? 'key-football' : 'key-odds').value.trim(); }
+
+function setSport(sport, btn) {
+  currentSport = sport;
+  document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateLeagueSelect();
+  updatePredTypes();
+  selectedMatch = null;
+  document.getElementById('selected-match-card').style.display = 'none';
+  document.getElementById('matches-list').innerHTML = '';
+  document.getElementById('result-section').innerHTML = '';
+}
+
+function updateLeagueSelect() {
+  const sel = document.getElementById('league-select');
+  sel.innerHTML = LEAGUES[currentSport].map(l => `<option value="${l.id}" data-odds="${l.oddsKey}">${l.name}</option>`).join('');
+}
+
+function updatePredTypes() {
+  const sel = document.getElementById('pred-type-select');
+  sel.innerHTML = (PRED_TYPES[currentSport] || []).map(p => `<option>${p}</option>`).join('');
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+// ─── FETCH MATCHES ───────────────────────────────────
+function getDates(days) {
+  const dates = [];
+  for(let i = 0; i <= days; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  return [...new Set(dates)];
+}
+
+async function fetchMatches() {
+  const kf = getKey('sb_football');
+  if(!kf) { showError('Ingresá tu API Token de football-data.org.'); return; }
+
+  const leagueId = document.getElementById('league-select').value;
+  const days = parseInt(document.getElementById('date-range').value);
+  const list = document.getElementById('matches-list');
+  list.innerHTML = '<div class="loading"><span class="spinner"></span>Buscando partidos...</div>';
+
+  // Date range
+  const dateFrom = new Date().toISOString().split('T')[0];
+  const dateTo = new Date(Date.now() + days * 86400000).toISOString().split('T')[0];
+
+  const allCodes = ['CL','PL','PD','SA','BL1','FL1','DED','BSA','ASL'];
+  const codes = leagueId === 'all' ? allCodes : [leagueId];
+
+  try {
+    const responses = await Promise.all(
+      codes.map(code =>
+        footballFetch(`/competitions/${code}/matches?dateFrom=${dateFrom}&dateTo=${dateTo}&status=SCHEDULED,LIVE`, kf)
+          .catch(() => ({ matches: [] }))
+      )
+    );
+
+    let allMatches = [];
+    responses.forEach(data => { allMatches = allMatches.concat(data.matches || []); });
+    allMatches.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+
+    if (!allMatches.length) {
+      const leagueName = document.getElementById('league-select').options[document.getElementById('league-select').selectedIndex]?.text || 'esta liga';
+      list.innerHTML = `<div class="info-box">
+        😕 No hay partidos programados para <strong>${leagueName}</strong> en este período.<br><br>
+        💡 Probá <strong>"⭐ Todas las ligas"</strong> o expandí el rango de fechas.
+      </div>`;
+      return;
+    }
+
+    // Group by date
+    const grouped = {};
+    allMatches.forEach(m => {
+      const dateKey = new Date(m.utcDate).toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+      if (!grouped[dateKey]) grouped[dateKey] = [];
+      grouped[dateKey].push(m);
+    });
+
+    let html = '';
+    Object.entries(grouped).forEach(([dateLabel, matches]) => {
+      html += `<div style="font-size:11px;color:#475569;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px;padding-left:4px">${dateLabel}</div>`;
+      html += matches.slice(0, 12).map(m => {
+        const home = m.homeTeam.name;
+        const away = m.awayTeam.name;
+        const time = new Date(m.utcDate).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+        const statusLabel = m.status === 'SCHEDULED' ? `🕐 ${time}hs` : m.status === 'FINISHED' ? '✅ Final' : m.status === 'IN_PLAY' ? '🔴 En juego' : m.status;
+        const safeM = JSON.stringify(m).replace(/"/g, '&quot;');
+        return `<div class="match-item" data-m="${safeM}" id="match-${m.id}">
+          <div>
+            <div class="match-teams">${home} <span style="color:#475569">vs</span> ${away}</div>
+            <div class="match-meta">${m.competition?.name || ''}</div>
+          </div>
+          <div class="match-time">${statusLabel}</div>
+        </div>`;
+      }).join('');
+    });
+
+    list.innerHTML = html;
+    list.querySelectorAll('.match-item').forEach(el => {
+      el.addEventListener('click', () => selectMatchFD(JSON.parse(el.dataset.m)));
+    });
+
+  } catch(e) {
+    list.innerHTML = `<div class="info-box">❌ Error: ${e.message}</div>`;
+  }
+}
+
+async function selectMatchFD(match) {
+  document.querySelectorAll('.match-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('match-' + match.id);
+  if(el) el.classList.add('selected');
+
+  selectedMatch = {
+    home: match.homeTeam.name,
+    away: match.awayTeam.name,
+    league: match.competition?.name || '',
+    date: match.utcDate,
+    manual: false,
+    fdMatch: match
+  };
+
+  document.getElementById('selected-match-card').style.display = 'block';
+  document.getElementById('result-section').innerHTML = '';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('odds-section').style.display = 'none';
+
+  document.getElementById('selected-match-info').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:#fff">${selectedMatch.home} <span style="color:#334155">vs</span> ${selectedMatch.away}</div>
+        <div style="font-size:12px;color:#475569;margin-top:3px">${selectedMatch.league}</div>
+      </div>
+      <div style="font-size:12px;color:#63cab7;font-weight:700">${new Date(selectedMatch.date).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})} · ${new Date(selectedMatch.date).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}hs</div>
+    </div>`;
+
+  await fetchOdds();
+  document.getElementById('btn-analyze').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+async function selectMatch(fixture) {
+  // Deselect all
+  document.querySelectorAll('.match-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('match-' + fixture.fixture.id);
+  if(el) el.classList.add('selected');
+
+  selectedMatch = {
+    home: fixture.teams.home.name,
+    away: fixture.teams.away.name,
+    homeId: fixture.teams.home.id,
+    awayId: fixture.teams.away.id,
+    league: fixture.league.name,
+    country: fixture.league.country,
+    fixtureId: fixture.fixture.id,
+    date: fixture.fixture.date,
+    manual: false
+  };
+
+  document.getElementById('selected-match-card').style.display = 'block';
+  document.getElementById('result-section').innerHTML = '';
+  document.getElementById('error-box').style.display = 'none';
+
+  document.getElementById('selected-match-info').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:#fff">${selectedMatch.home} <span style="color:#334155">vs</span> ${selectedMatch.away}</div>
+        <div style="font-size:12px;color:#475569;margin-top:3px">${selectedMatch.league} · ${selectedMatch.country}</div>
+      </div>
+      <div style="font-size:12px;color:#63cab7;font-weight:700">${new Date(selectedMatch.date).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</div>
+    </div>`;
+
+  // Fetch odds
+  await fetchOdds();
+  // Fetch team stats in background
+  fetchTeamStats(fixture.teams.home.id, fixture.teams.away.id, fixture.league.id);
+
+  document.getElementById('btn-analyze').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ─── FETCH ODDS ───────────────────────────────────────
+async function fetchOdds() {
+  const ko = getKey('sb_odds');
+  if(!ko) return;
+  const sel = document.getElementById('league-select');
+  const oddsKey = sel.options[sel.selectedIndex]?.dataset.odds;
+  if(!oddsKey) return;
+
+  try {
+    const res = await fetch(`${ODDS_API_URL}/sports/${oddsKey}/odds/?apiKey=${ko}&regions=eu&markets=h2h,totals&oddsFormat=decimal`);
+    const data = await res.json();
+    if(!Array.isArray(data)) return;
+
+    // Find matching game
+    const home = selectedMatch.home.toLowerCase();
+    const away = selectedMatch.away.toLowerCase();
+    const game = data.find(g =>
+      (g.home_team.toLowerCase().includes(home.split(' ')[0]) || home.includes(g.home_team.toLowerCase().split(' ')[0])) &&
+      (g.away_team.toLowerCase().includes(away.split(' ')[0]) || away.includes(g.away_team.toLowerCase().split(' ')[0]))
+    );
+
+    if(game) {
+      fetchedOdds = game;
+      renderOdds(game);
+    }
+  } catch(e) { /* odds fetch failed silently */ }
+}
+
+function renderOdds(game) {
+  const section = document.getElementById('odds-section');
+  const display = document.getElementById('odds-display');
+  section.style.display = 'block';
+
+  const h2h = game.bookmakers?.[0]?.markets?.find(m => m.key === 'h2h');
+  if(!h2h) return;
+
+  const outcomes = h2h.outcomes;
+  const homeOdd = outcomes.find(o => o.name === game.home_team)?.price || '-';
+  const awayOdd = outcomes.find(o => o.name === game.away_team)?.price || '-';
+  const drawOdd = outcomes.find(o => o.name === 'Draw')?.price || '-';
+  const bookie = game.bookmakers[0].title;
+
+  display.innerHTML = `
+    <div class="odds-grid">
+      <div class="odd-box"><div class="odd-label">1 Local</div><div class="odd-val">${homeOdd}</div></div>
+      <div class="odd-box"><div class="odd-label">X Empate</div><div class="odd-val">${drawOdd}</div></div>
+      <div class="odd-box"><div class="odd-label">2 Visitante</div><div class="odd-val">${awayOdd}</div></div>
+    </div>
+    <div style="font-size:10px;color:#334155;margin-top:6px;text-align:right">Fuente: ${bookie}</div>`;
+}
+
+// ─── FETCH TEAM STATS ────────────────────────────────
+async function fetchTeamStats(homeId, awayId, leagueId) {
+  // football-data.org free tier doesn't expose per-team stats endpoint
+  // Stats context is built from match history if available
+}
+
+// ─── MANUAL MODE ─────────────────────────────────────
+function useManual() {
+  const home = document.getElementById('manual-home').value.trim();
+  const away = document.getElementById('manual-away').value.trim();
+  if(!home || !away) { showError('Ingresá ambos equipos.'); return; }
+
+  selectedMatch = {
+    home, away,
+    league: document.getElementById('league-select').options[document.getElementById('league-select').selectedIndex]?.text || 'Manual',
+    homeForm: document.getElementById('manual-hform').value || 'GGGPP',
+    awayForm: document.getElementById('manual-aform').value || 'GGPPP',
+    homeGoalsFor: document.getElementById('manual-hgf').value || '1.5',
+    awayGoalsFor: document.getElementById('manual-agf').value || '1.3',
+    extraCtx: document.getElementById('manual-ctx').value,
+    manual: true
+  };
+
+  document.getElementById('selected-match-card').style.display = 'block';
+  document.getElementById('result-section').innerHTML = '';
+  document.getElementById('selected-match-info').innerHTML = `
+    <div style="font-size:18px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:#fff">${home} <span style="color:#334155">vs</span> ${away}</div>
+    <div style="font-size:12px;color:#475569;margin-top:3px">${selectedMatch.league} · Ingresado manualmente</div>`;
+  document.getElementById('btn-analyze').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ─── ANALYZE ─────────────────────────────────────────
+async function analyze() {
+  const ka = getKey('sb_anthropic');
+  if(!ka) { showError('Ingresá tu API Key de Anthropic en la configuración.'); return; }
+  if(!selectedMatch) { showError('Seleccioná o ingresá un partido primero.'); return; }
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  let dots = '.';
+  const iv = setInterval(() => { dots = dots.length >= 4 ? '.' : dots + '.'; btn.textContent = `Analizando con IA${dots}`; }, 400);
+
+  const predType = document.getElementById('pred-type-select').value;
+  const extraCtx = document.getElementById('extra-ctx').value || selectedMatch.extraCtx || '';
+  const sportLabel = {football:'Fútbol ⚽', basketball:'Basketball 🏀', tennis:'Tenis 🎾'}[currentSport];
+
+  // Build stats context
+  let statsCtx = '';
+  if(selectedMatch.homeStats && selectedMatch.awayStats) {
+    const hs = selectedMatch.homeStats;
+    const as_ = selectedMatch.awayStats;
+    const hgf = hs.goals?.for?.average?.total || 'N/D';
+    const hga = hs.goals?.against?.average?.total || 'N/D';
+    const agf = as_.goals?.for?.average?.total || 'N/D';
+    const aga = as_.goals?.against?.average?.total || 'N/D';
+    const hForm = hs.form?.slice(-5) || 'N/D';
+    const aForm = as_.form?.slice(-5) || 'N/D';
+    statsCtx = `ESTADÍSTICAS REALES DE LA TEMPORADA:
+- ${selectedMatch.home}: ${hgf} goles/partido anotados, ${hga} recibidos, forma: ${hForm}
+- ${selectedMatch.away}: ${agf} goles/partido anotados, ${aga} recibidos, forma: ${aForm}`;
+  } else if(selectedMatch.manual) {
+    statsCtx = `DATOS INGRESADOS MANUALMENTE:
+- ${selectedMatch.home}: ${selectedMatch.homeGoalsFor} goles/partido, forma: ${selectedMatch.homeForm}
+- ${selectedMatch.away}: ${selectedMatch.awayGoalsFor} goles/partido, forma: ${selectedMatch.awayForm}`;
+  }
+
+  // Odds context
+  let oddsCtx = '';
+  if(fetchedOdds) {
+    const h2h = fetchedOdds.bookmakers?.[0]?.markets?.find(m => m.key === 'h2h');
+    if(h2h) {
+      oddsCtx = `CUOTAS DE MERCADO: ${h2h.outcomes.map(o => `${o.name}: ${o.price}`).join(' | ')}`;
+    }
+  }
+
+  const prompt = `Eres un analista deportivo experto con 20 años de experiencia en pronósticos. Analiza este partido con toda la información disponible.
+
+DEPORTE: ${sportLabel}
+LIGA: ${selectedMatch.league}
+TIPO DE PRONÓSTICO SOLICITADO: ${predType}
+EQUIPO LOCAL: ${selectedMatch.home}
+EQUIPO VISITANTE: ${selectedMatch.away}
+${statsCtx}
+${oddsCtx}
+${extraCtx ? `CONTEXTO ADICIONAL: ${extraCtx}` : ''}
+
+Considera: ventaja de local, forma reciente, estadísticas ofensivas/defensivas, las cuotas de mercado como indicador de probabilidad implícita, y cualquier factor contextual.
+
+Responde ÚNICAMENTE con JSON válido (sin markdown, sin texto extra):
+{"prediccion_principal":"pronóstico recomendado conciso","confianza":número 1-100,"nivel":"ALTA" o "MEDIA" o "BAJA","probabilidades":[{"label":"opción 1","pct":número,"highlight":true},{"label":"opción 2","pct":número,"highlight":false},{"label":"opción 3","pct":número,"highlight":false}],"fortalezas_local":["punto 1","punto 2","punto 3"],"fortalezas_visitante":["punto 1","punto 2","punto 3"],"factores_clave":["factor 1","factor 2","factor 3"],"razonamiento":"2-3 oraciones explicando el análisis","advertencia":"principal factor de riesgo o incertidumbre","valor_apuesta":{"existe":true o false,"descripcion":"si existe value bet explicar cuál y por qué"}}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ka,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    if(data.error) { showError('Error API Anthropic: ' + data.error.message); return; }
+    const text = data.content?.map(b => b.text||'').join('') || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const r = JSON.parse(clean);
+    renderResult(r);
+  } catch(e) {
+    showError('Error al analizar. Verificá tu API Key de Anthropic.');
+  } finally {
+    clearInterval(iv);
+    btn.disabled = false;
+    btn.textContent = '🔮 Analizar con IA';
+  }
+}
+
+// ─── RENDER RESULT ───────────────────────────────────
+function renderResult(r) {
+  const levelColor = {ALTA:'#22d3a0',MEDIA:'#f59e0b',BAJA:'#f87171'};
+  const levelBg = {ALTA:'rgba(34,211,160,0.12)',MEDIA:'rgba(245,158,11,0.12)',BAJA:'rgba(248,113,113,0.12)'};
+  const lc = levelColor[r.nivel]||'#63cab7';
+  const lb = levelBg[r.nivel]||'rgba(99,202,183,0.1)';
+
+  const probsHtml = (r.probabilidades||[]).map(p => `
+    <div class="prob-wrap ${p.highlight?'hi':'lo'}">
+      <div class="prob-row">
+        <span class="prob-name" style="color:${p.highlight?'#63cab7':'#94a3b8'}">${p.label}</span>
+        <span class="prob-pct" style="color:${p.highlight?'#63cab7':'#e2e8f0'}">${p.pct}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${p.pct}%;background:${p.highlight?'linear-gradient(90deg,#22d3a0,#0ea5e9)':'linear-gradient(90deg,#334155,#475569)'}"></div></div>
+    </div>`).join('');
+
+  const teamCard = (name, strengths, color) => {
+    const str = (strengths||[]).map(s => `<div class="str-item"><span style="color:${color}">✓</span>${s}</div>`).join('');
+    return `<div class="team-card">
+      <div class="team-title" style="color:${color}">${name}</div>
+      <div>${str}</div>
+    </div>`;
+  };
+
+  const valueBet = r.valor_apuesta?.existe ? `
+    <div class="value-badge">
+      <span>💡 Value Bet detectado</span>
+      <strong>→ ${r.valor_apuesta.descripcion}</strong>
+    </div>` : '';
+
+  const html = `<div class="result">
+    <div class="result-hero">
+      <div>
+        <div class="pred-label-sm">Pronóstico Principal</div>
+        <div class="pred-main">${r.prediccion_principal}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pred-label-sm">Confianza</div>
+        <div class="conf-num">${r.confianza}%</div>
+        <div class="nivel-badge" style="background:${lb};border:1px solid ${lc};color:${lc}">${r.nivel}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Probabilidades estimadas</div>
+      ${probsHtml}
+    </div>
+
+    <div class="teams-grid">
+      ${teamCard(selectedMatch.home, r.fortalezas_local, '#0ea5e9')}
+      ${teamCard(selectedMatch.away, r.fortalezas_visitante, '#a78bfa')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Factores Clave</div>
+      <div class="tags">${(r.factores_clave||[]).map(f=>`<span class="tag">${f}</span>`).join('')}</div>
+      ${valueBet}
+      <div class="card-title">Razonamiento</div>
+      <p class="reasoning">${r.razonamiento}</p>
+      ${r.advertencia ? `<div class="warning-box"><span style="font-size:16px">⚠️</span><p>${r.advertencia}</p></div>` : ''}
+    </div>
+
+    <div style="text-align:center;padding:12px 0;font-size:11px;color:#1e293b">
+      ScoutBot PRO · Solo para entretenimiento · No es asesoramiento financiero
+    </div>
+  </div>`;
+
+  const section = document.getElementById('result-section');
+  section.innerHTML = html;
+  section.scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>
